@@ -1,10 +1,55 @@
-import React from 'react';
+import React, {
+  ChangeEvent,
+  FormEvent,
+  useCallback,
+  useEffect,
+  useState,
+} from 'react';
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import Image from 'next/image';
 import styles from '../styles/Home.module.css';
 
+import * as tf from '@tensorflow/tfjs';
+import * as toxicity from '@tensorflow-models/toxicity';
+
+const threshold = 0.9;
+const labelsToInclude = ['identity_attack', 'insult', 'threat'];
+
+interface Result {
+  label: string;
+  results: {
+    probabilities: Float32Array;
+    match: boolean;
+  }[];
+}
+
 const Home: NextPage = () => {
+  const [text, setText] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [results, setResults] = useState<Result[]>([]);
+
+  const onChangeHandler = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    setText(e.target.value);
+  }, []);
+
+  const submitHandler = useCallback(
+    async (e: FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      setIsLoading(true);
+      console.log(text);
+      const model = await toxicity.load(threshold, labelsToInclude);
+      const pred = await model.classify([text]);
+      setResults(pred);
+      setIsLoading(false);
+    },
+    [text]
+  );
+
+  useEffect(() => {
+    console.log(tf);
+  }, []);
+
   return (
     <div className={styles.container}>
       <Head>
@@ -15,6 +60,41 @@ const Home: NextPage = () => {
 
       <main className={styles.main}>
         <h1 className={styles.title}>TensorFlow.js with Next.js!!</h1>
+
+        <form onSubmit={submitHandler}>
+          <input
+            name="text"
+            type="text"
+            required
+            value={text}
+            onChange={onChangeHandler}
+          />
+          <button type="submit">送信</button>
+        </form>
+
+        {isLoading && <p>解析中です…</p>}
+
+        {results.length > 0 && (
+          <div>
+            <p>結果</p>
+            <table>
+              <tbody>
+                {results.map((result, i) => (
+                  <tr key={i}>
+                    <td>{result.label}</td>
+                    {result.results.map((item) => (
+                      <>
+                        <td>{item.match?.toString()}</td>
+                        <td>{item.probabilities[0].toFixed(4)}</td>
+                        <td>{item.probabilities[1].toFixed(4)}</td>
+                      </>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </main>
 
       <footer className={styles.footer}>
