@@ -14,7 +14,16 @@ import * as tf from '@tensorflow/tfjs';
 import * as toxicity from '@tensorflow-models/toxicity';
 
 const threshold = 0.9;
-const labelsToInclude = ['identity_attack', 'insult', 'threat'];
+
+const labelsToInclude = [
+  'identity_attack',
+  'insult',
+  'obscene',
+  'threat',
+  'severe_toxicity',
+  'sexual_explicit',
+  'toxicity',
+];
 
 interface Result {
   label: string;
@@ -37,7 +46,6 @@ const Home: NextPage = () => {
     async (e: FormEvent<HTMLFormElement>) => {
       e.preventDefault();
       setIsLoading(true);
-      console.log(text);
       const model = await toxicity.load(threshold, labelsToInclude);
       const pred = await model.classify([text]);
       setResults(pred);
@@ -60,6 +68,8 @@ const Home: NextPage = () => {
 
       <main className={styles.main}>
         <h1 className={styles.title}>TensorFlow.js with Next.js!!</h1>
+
+        <h2 className={styles.title}>テキストの有害度検出</h2>
 
         <form onSubmit={submitHandler}>
           <input
