@@ -14,8 +14,12 @@
     "@emotion/styled": "^11",
     "@tensorflow-models/toxicity": "^1.2.2",
     "@tensorflow/tfjs": "^3.9.0",
+    "danfojs": "^0.3.4",
+    "danfojs-node": "^0.3.4",
     "framer-motion": "^4",
+    "install": "^0.13.0",
     "next": "11.1.2",
+    "plotly.js-dist-min": "^2.8.0",
     "react": "17.0.2",
     "react-dom": "17.0.2"
   },
