@@ -24,10 +24,14 @@ import {
   Tr,
   Tbody,
   Td,
+  Input,
+  HStack,
+  TableContainer,
 } from '@chakra-ui/react';
 
 import * as tf from '@tensorflow/tfjs';
 import * as toxicity from '@tensorflow-models/toxicity';
+import * as dfd from 'danfojs';
 
 const threshold = 0.9;
 
@@ -49,10 +53,42 @@ interface Result {
   }[];
 }
 
+const Df2Table = function Df2Table({ df }: { df: dfd.DataFrame }): JSX.Element {
+  console.log(df);
+
+  return (
+    <>
+      <TableContainer>
+        <Table>
+          <Thead>
+            <Td></Td>
+            {df.columns.map((name, i) => (
+              <Td key={i}>{name}</Td>
+            ))}
+          </Thead>
+          <Tbody>
+            {df.values.map((values, i) => (
+              <Tr key={i}>
+                <Td>{i + 1}</Td>
+                {typeof values !== 'string' &&
+                  typeof values !== 'number' &&
+                  typeof values !== 'boolean' &&
+                  values.map((value, j) => <Td key={j}>{value}</Td>)}
+              </Tr>
+            ))}
+          </Tbody>
+        </Table>
+      </TableContainer>
+    </>
+  );
+};
+
 const Home: NextPage = () => {
   const [text, setText] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [results, setResults] = useState<Result[]>([]);
+
+  const [stateDf, setDf] = useState<dfd.DataFrame | undefined>(undefined);
 
   const onChangeHandler = useCallback((e: ChangeEvent<HTMLTextAreaElement>) => {
     setText(e.target.value);
@@ -72,6 +108,17 @@ const Home: NextPage = () => {
 
   useEffect(() => {
     console.log(tf);
+  }, []);
+
+  useEffect(() => {
+    const json_data = [
+      { A: 0.4612, B: 4.28283, C: -1.509, D: -1.1352 },
+      { A: 0.5112, B: -0.22863, C: -3.39059, D: 1.1632 },
+      { A: 0.6911, B: -0.82863, C: -1.5059, D: 2.1352 },
+      { A: 0.4692, B: -1.28863, C: 4.5059, D: 4.1632 },
+    ];
+    const df = new dfd.DataFrame(json_data);
+    setDf(df);
   }, []);
 
   return (
@@ -101,6 +148,26 @@ const Home: NextPage = () => {
               <Button type="submit">送信</Button>
             </Box>
           </form>
+
+          <input type="file" />
+
+          {stateDf && (
+            <div>
+              <p>{stateDf.columns.toString()}</p>
+
+              <p>フィルター</p>
+
+              <HStack>
+                {stateDf.columns.map((name, i) => (
+                  <>
+                    <label>{name}</label>
+                    <Input key={i} type="text" />
+                  </>
+                ))}
+              </HStack>
+              <Df2Table df={stateDf} />
+            </div>
+          )}
 
           {isLoading && (
             <Flex alignItems="center" justifyContent="center">
